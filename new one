@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BART Task</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2em;
+      background-color: #f8f8f8;
+    }
+    h1 {
+      color: #d6336c;
+    }
+    #info {
+      margin-bottom: 20px;
+    }
+    #balloon {
+      width: 100px;
+      height: 100px;
+      background-color: #ff4d4d;
+      border-radius: 50%;
+      margin: 20px auto;
+      transition: width 0.2s ease, height 0.2s ease;
+    }
+    button {
+      padding: 12px 24px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+    }
+    #pumpBtn {
+      background-color: #4dabf7;
+      color: white;
+    }
+    #collectBtn {
+      background-color: #51cf66;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Balloon Analogue Risk Task (BART)</h1>
+
+  <div id="info">
+    <p><strong>Balloon #:</strong> <span id="balloonNum">1</span></p>
+    <p><strong>Pumps:</strong> <span id="pumps">0</span></p>
+    <p><strong>Score This Balloon:</strong> <span id="tempScore">0</span></p>
+    <p><strong>Total Score:</strong> <span id="totalScore">0</span></p>
+  </div>
+
+  <div id="balloon"></div>
+
+  <button id="pumpBtn">Pump</button>
+  <button id="collectBtn">Collect</button>
+
+  <script>
+    let balloonNum = 1;
+    let totalScore = 0;
+    let tempScore = 0;
+    let pumps = 0;
+    let explosionThreshold = getRandomThreshold();
+    const maxBalloons = 20;
+    let results = [];
+
+    function getRandomThreshold() {
+      return Math.floor(Math.random() * 32) + 1; // between 1–32
+    }
+
+    document.getElementById("pumpBtn").addEventListener("click", () => {
+      pumps++;
+      tempScore++;
+      updateUI();
+
+      if (pumps >= explosionThreshold) {
+        alert("💥 The balloon exploded!");
+        nextBalloon(false);
+      } else {
+        growBalloon();
+      }
+    });
+
+    document.getElementById("collectBtn").addEventListener("click", () => {
+      totalScore += tempScore;
+      nextBalloon(true);
+    });
+
+    function nextBalloon(collected) {
+      logTrialData(collected);
+      if (balloonNum >= maxBalloons) {
+        alert("🎉 Task complete! Total Score: " + totalScore);
+        downloadData();
+        return;
+      }
+      balloonNum++;
+      pumps = 0;
+      tempScore = 0;
+      explosionThreshold = getRandomThreshold();
+      resetBalloon();
+      updateUI();
+    }
+
+    function growBalloon() {
+      const balloon = document.getElementById("balloon");
+      let newSize = 100 + pumps * 5;
+      balloon.style.width = newSize + "px";
+      balloon.style.height = newSize + "px";
+    }
+
+    function resetBalloon() {
+      const balloon = document.getElementById("balloon");
+      balloon.style.width = "100px";
+      balloon.style.height = "100px";
+    }
+
+    function updateUI() {
+      document.getElementById("balloonNum").textContent = balloonNum;
+      document.getElementById("pumps").textContent = pumps;
+      document.getElementById("tempScore").textContent = tempScore;
+      document.getElementById("totalScore").textContent = totalScore;
+    }
+
+    function logTrialData(collected) {
+      results.push({
+        balloon: balloonNum,
+        pumps: pumps,
+        collected: collected,
+        earned: collected ? tempScore : 0,
+        exploded: !collected
+      });
+    }
+
+    function downloadData() {
+      let csv = "balloon,pumps,collected,earned,exploded\n";
+      results.forEach(r => {
+        csv += `${r.balloon},${r.pumps},${r.collected},${r.earned},${r.exploded}\n`;
+      });
+      let blob = new Blob([csv], { type: 'text/csv' });
+      let link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "bart_results.csv";
+      link.click();
+    }
+  </script>
+
+</body>
+</html>
